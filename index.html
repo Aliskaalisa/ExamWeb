@@ -8,299 +8,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chemistry Quiz Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <style>
-        /* Hide answers by default and reveal them when the `.show` class is toggled */
-        .answer { display: none; }
-        .answer.show { display: block; }
-    </style>
+    <!-- SheetJS for reading DB.xlsx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.3/xlsx.full.min.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
-<!-- main wrapper at 70% width -->
-<div class="mx-auto px-4 py-8" style="width:70%;">
-    <header class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-indigo-800 mb-2">Chemistry Quiz Master</h1>
-        <p class="text-lg text-gray-600">Test your chemistry knowledge with interactive questions</p>
-    </header>
+<body class="bg-gray-100 font-sans">
+    <main class="w-[70%] mx-auto py-6">
+        <!-- Logo & Title -->
+        <header class="flex items-center mb-6">
+            <img src="chemistry.png" alt="Chemistry Logo" class="h-12 w-auto mr-4" />
+            <h1 class="text-3xl font-bold text-gray-800">Chemistry Quiz Master</h1>
+        </header>
 
-    <!-- Filter Panel -->
-    <div id="filterSection" class="bg-white p-6 rounded-xl shadow-md mb-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Questions</h2>
-        <div class="flex flex-wrap gap-4 mb-4">
-            <!-- Include Category Multi‑Select -->
-            <div class="relative" id="includeWrapper">
-                <label for="includeDropdownBtn" class="block text-sm font-medium text-gray-700 mb-1">Choose category</label>
-                <button id="includeDropdownBtn" type="button" class="w-52 px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <span id="includeDropdownLabel" class="truncate text-left">All</span>
-                    <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
-                </button>
-                <div id="includeDropdown" class="absolute z-10 mt-1 w-52 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
-            </div>
-
-            <!-- Exclude Category Multi‑Select -->
-            <div class="relative" id="excludeWrapper">
-                <label for="excludeDropdownBtn" class="block text-sm font-medium text-gray-700 mb-1">Exclude category</label>
-                <button id="excludeDropdownBtn" type="button" class="w-52 px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <span id="excludeDropdownLabel" class="truncate text-left">None</span>
-                    <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
-                </button>
-                <div id="excludeDropdown" class="absolute z-10 mt-1 w-52 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
-            </div>
-
-            <!-- Max Questions -->
+        <!-- Controls Panel -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <!-- Choose Category -->
             <div>
-                <label for="maxQuestions" class="block text-sm font-medium text-gray-700 mb-1">Max Questions</label>
-                <input type="number" id="maxQuestions" min="1" value="10" class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
-
-            <!-- Random Order Checkbox -->
-            <div class="flex items-end">
-                <div class="flex items-center h-9">
-                    <input type="checkbox" id="randomOrder" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2">
-                    <label for="randomOrder" class="text-sm font-medium text-gray-700 select-none">Random order</label>
-                </div>
-            </div>
-        </div>
-        <div class="flex items-center">
-            <input type="text" id="searchInput" placeholder="Search questions..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button id="searchBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- Questions Grid -->
-    <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6"></div>
-    <div id="noResults" class="text-center py-12 hidden">
-        <i class="fas fa-flask text-5xl text-gray-300 mb-4"></i>
-        <h3 class="text-xl font-medium text-gray-500">No questions found. Select filters to begin.</h3>
-    </div>
-</div>
-
-<!-- XLSX library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-    const questionsContainer   = document.getElementById('questionsContainer');
-    const noResults            = document.getElementById('noResults');
-    const searchInput          = document.getElementById('searchInput');
-    const searchBtn            = document.getElementById('searchBtn');
-    const maxQuestionsInput    = document.getElementById('maxQuestions');
-    const randomOrderCheckbox  = document.getElementById('randomOrder');
-
-    // Multi‑select elements
-    const includeDropdownBtn   = document.getElementById('includeDropdownBtn');
-    const includeDropdown      = document.getElementById('includeDropdown');
-    const includeDropdownLabel = document.getElementById('includeDropdownLabel');
-
-    const excludeDropdownBtn   = document.getElementById('excludeDropdownBtn');
-    const excludeDropdown      = document.getElementById('excludeDropdown');
-    const excludeDropdownLabel = document.getElementById('excludeDropdownLabel');
-
-    let allQuestions = [];
-    const currentFilter = {
-        include: [],
-        exclude: [],
-        searchTerm: '',
-        max: 10,
-        random: false
-    };
-
-    /* --------- Helpers ---------- */
-    const updateDropdownLabel = (labelEl, arr, emptyText) => {
-        if (arr.length === 0) {
-            labelEl.textContent = emptyText;
-        } else if (arr.length === 1) {
-            labelEl.textContent = arr[0];
-        } else {
-            labelEl.textContent = `${arr.length} selected`;
-        }
-    };
-
-    const createCheckboxItem = (cat, group) => {
-        const safeId = `${group}-${cat.replace(/\s+/g, '_')}`;
-        const wrapper = document.createElement('div');
-        wrapper.className = 'px-4 py-2 hover:bg-gray-100 flex items-center gap-2';
-        wrapper.innerHTML = `
-            <input type="checkbox" id="${safeId}" value="${cat}" class="cursor-pointer">
-            <label for="${safeId}" class="text-sm cursor-pointer select-none">${cat}</label>
-        `;
-        return wrapper;
-    };
-
-    /* --------- Populate Categories ---------- */
-    const populateCategoryDropdowns = (categories) => {
-        includeDropdown.innerHTML = '';
-        excludeDropdown.innerHTML = '';
-
-        categories.forEach(cat => {
-            /* Include list */
-            const incItem = createCheckboxItem(cat, 'inc');
-            incItem.querySelector('input').addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    currentFilter.include.push(cat);
-                } else {
-                    currentFilter.include = currentFilter.include.filter(c => c !== cat);
-                }
-                updateDropdownLabel(includeDropdownLabel, currentFilter.include, 'All');
-                renderQuestions();
-            });
-            includeDropdown.appendChild(incItem);
-
-            /* Exclude list */
-            const excItem = createCheckboxItem(cat, 'exc');
-            excItem.querySelector('input').addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    currentFilter.exclude.push(cat);
-                } else {
-                    currentFilter.exclude = currentFilter.exclude.filter(c => c !== cat);
-                }
-                updateDropdownLabel(excludeDropdownLabel, currentFilter.exclude, 'None');
-                renderQuestions();
-            });
-            excludeDropdown.appendChild(excItem);
-        });
-    };
-
-    /* --------- Load Excel ---------- */
-    async function loadQuestionsFromExcel() {
-        try {
-            const res = await fetch('DB.xlsx');
-            const data = await res.arrayBuffer();
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet);
-
-            allQuestions = json.map((row, index) => {
-                const rawCategories = row.category || 'general';
-                const categories = rawCategories.split(',').map(c => c.trim().toLowerCase());
-                return {
-                    id: index + 1,
-                    question: row.question,
-                    answer: row.answer,
-                    categories
-                };
-            });
-
-            // Unique sorted categories
-            const categorySet = new Set();
-            allQuestions.forEach(q => q.categories.forEach(cat => categorySet.add(cat)));
-            populateCategoryDropdowns(Array.from(categorySet).sort());
-
-            renderQuestions();
-        } catch (error) {
-            console.error('Failed to load Excel file:', error);
-            questionsContainer.innerHTML = `<p class="text-red-600 text-center">Failed to load questions. Check DB.xlsx file.</p>`;
-        }
-    }
-
-    /* --------- Rendering ---------- */
-    function renderQuestions() {
-        questionsContainer.innerHTML = '';
-
-        let filtered = allQuestions.filter(q => {
-            const hasInclude = currentFilter.include.length === 0 || q.categories.some(cat => currentFilter.include.includes(cat));
-            const noExclude = q.categories.every(cat => !currentFilter.exclude.includes(cat));
-            const matchSearch = !currentFilter.searchTerm ||
-                q.question.toLowerCase().includes(currentFilter.searchTerm) ||
-                q.answer.toLowerCase().includes(currentFilter.searchTerm);
-            return hasInclude && noExclude && matchSearch;
-        });
-
-        // Shuffle if random order is enabled
-        if (currentFilter.random) {
-            filtered = filtered.sort(() => Math.random() - 0.5);
-        }
-
-        filtered = filtered.slice(0, currentFilter.max);
-
-        if (filtered.length === 0) {
-            noResults.classList.remove('hidden');
-            return;
-        } else {
-            noResults.classList.add('hidden');
-        }
-
-        filtered.forEach(q => {
-            const el = document.createElement('div');
-            el.className = 'question-card bg-white rounded-xl shadow-md overflow-hidden';
-            el.id = `question-${q.id}`;
-            el.innerHTML = `
-                <div class="p-6">
-                    <div class="mb-4">${q.categories.map(cat => `<span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">${cat}</span>`).join('')}</div>
-                    <h3 class="text-lg font-medium text-gray-800 mb-4">${q.question}</h3>
-                    <div class="answer" id="answer-${q.id}">
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="text-sm font-semibold text-gray-500 mb-2">Answer:</h4>
-                            <p class="text-gray-700">${q.answer}</p>
-                        </div>
-                    </div>
-                    <button onclick="toggleAnswer(${q.id})" class="toggle-btn mt-4 w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
-                        <span class="mr-2">Show Answer</span>
-                        <i class="fas fa-chevron-down"></i>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Choose category</label>
+                <div class="relative">
+                    <button id="chooseToggle" class="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-left flex justify-between items-center">
+                        <span id="chooseSummary" class="truncate text-gray-700">Select…</span>
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
+                    <div id="chooseMenu" class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
                 </div>
-            `;
-            questionsContainer.appendChild(el);
+            </div>
+
+            <!-- Exclude Category -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Exclude category</label>
+                <div class="relative">
+                    <button id="excludeToggle" class="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-left flex justify-between items-center">
+                        <span id="excludeSummary" class="truncate text-gray-700">Select…</span>
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div id="excludeMenu" class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional Options -->
+        <section class="flex items-center gap-6 mb-6">
+            <label class="inline-flex items-center">
+                <input id="randomCheckbox" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+                <span class="ml-2 text-sm text-gray-700">Random order</span>
+            </label>
+            <label class="inline-flex items-center">
+                <span class="mr-2 text-sm text-gray-700">Max Questions:</span>
+                <input id="maxQuestions" type="number" min="1" class="w-20 px-2 py-1 border border-gray-300 rounded-md" />
+            </label>
+        </section>
+
+        <!-- Questions Area -->
+        <section id="questionsContainer" class="space-y-4"></section>
+    </main>
+
+    <script>
+        // ================ DATA LOADING ===================
+        let allQuestions = [];
+        let categories = [];
+
+        async function loadQuestions() {
+            try {
+                const response = await fetch('DB.xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+                // Convert sheet to JSON
+                const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                // Expecting first row: Question | Answer | Category
+                allQuestions = json.slice(1).map(r => ({
+                    question: r[0],
+                    answer: r[1],
+                    category: r[2]
+                })).filter(q => q.question && q.answer);
+
+                // Extract unique categories
+                categories = [...new Set(allQuestions.map(q => q.category))].sort();
+                buildDropdowns();
+                renderQuestions();
+            } catch (err) {
+                console.error('Error loading DB.xlsx:', err);
+            }
+        }
+
+        // ================ DROPDOWN BUILDERS ===================
+        function buildDropdowns() {
+            const chooseMenu = document.getElementById('chooseMenu');
+            const excludeMenu = document.getElementById('excludeMenu');
+            chooseMenu.innerHTML = '';
+            excludeMenu.innerHTML = '';
+
+            categories.forEach(cat => {
+                chooseMenu.appendChild(createCheckboxItem('choose', cat));
+                excludeMenu.appendChild(createCheckboxItem('exclude', cat));
+            });
+        }
+
+        function createCheckboxItem(prefix, category) {
+            const id = `${prefix}-${category.replace(/\s+/g, '-')}`;
+            const label = document.createElement('label');
+            label.className = 'flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.id = id;
+            input.className = 'h-4 w-4 text-indigo-600 border-gray-300 rounded';
+            input.dataset.category = category;
+            input.addEventListener('change', () => {
+                updateSummaries();
+                renderQuestions();
+            });
+
+            const span = document.createElement('span');
+            span.className = 'ml-2 text-sm text-gray-700';
+            span.textContent = category;
+
+            label.appendChild(input);
+            label.appendChild(span);
+            return label;
+        }
+
+        function updateSummaries() {
+            const chooseSummary = document.getElementById('chooseSummary');
+            const excludeSummary = document.getElementById('excludeSummary');
+
+            const chooseSelected = Array.from(document.querySelectorAll('#chooseMenu input:checked')).map(i => i.dataset.category);
+            const excludeSelected = Array.from(document.querySelectorAll('#excludeMenu input:checked')).map(i => i.dataset.category);
+
+            chooseSummary.textContent = chooseSelected.length ? chooseSelected.join(', ') : 'Select…';
+            excludeSummary.textContent = excludeSelected.length ? excludeSelected.join(', ') : 'Select…';
+        }
+
+        // ================ QUESTION RENDERING ===================
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            const include = Array.from(document.querySelectorAll('#chooseMenu input:checked')).map(i => i.dataset.category);
+            const exclude = Array.from(document.querySelectorAll('#excludeMenu input:checked')).map(i => i.dataset.category);
+            const max = parseInt(document.getElementById('maxQuestions').value, 10) || Infinity;
+            const random = document.getElementById('randomCheckbox').checked;
+
+            let filtered = allQuestions.filter(q => {
+                const inInclude = include.length === 0 || include.includes(q.category);
+                const inExclude = exclude.includes(q.category);
+                return inInclude && !inExclude;
+            });
+
+            if (random) {
+                filtered = shuffleArray(filtered);
+            }
+
+            filtered.slice(0, max).forEach(({ question, answer }) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 border border-gray-200 rounded-md shadow-sm';
+
+                const qText = document.createElement('p');
+                qText.className = 'text-gray-800 font-medium';
+                qText.textContent = question;
+
+                const aText = document.createElement('p');
+                aText.className = 'text-gray-700 mt-2 hidden';
+                aText.textContent = answer;
+
+                const btn = document.createElement('button');
+                btn.className = 'mt-4 text-indigo-600 hover:underline';
+                btn.textContent = 'Show Answer';
+                btn.addEventListener('click', () => {
+                    aText.classList.toggle('hidden');
+                    btn.textContent = aText.classList.contains('hidden') ? 'Show Answer' : 'Hide Answer';
+                });
+
+                card.appendChild(qText);
+                card.appendChild(aText);
+                card.appendChild(btn);
+                container.appendChild(card);
+            });
+        }
+
+        // ================ HELPER FUNCTIONS ===================
+        function shuffleArray(arr) {
+            const clone = [...arr];
+            for (let i = clone.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [clone[i], clone[j]] = [clone[j], clone[i]];
+            }
+            return clone;
+        }
+
+        // ================ DROPDOWN TOGGLE HANDLERS ===================
+        document.getElementById('chooseToggle').addEventListener('click', () => toggleMenu('chooseMenu'));
+        document.getElementById('excludeToggle').addEventListener('click', () => toggleMenu('excludeMenu'));
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#chooseToggle') && !e.target.closest('#chooseMenu')) {
+                document.getElementById('chooseMenu').classList.add('hidden');
+            }
+            if (!e.target.closest('#excludeToggle') && !e.target.closest('#excludeMenu')) {
+                document.getElementById('excludeMenu').classList.add('hidden');
+            }
         });
-    }
 
-    /* --------- Toggle answer ---------- */
-    function toggleAnswer(id) {
-        const answer = document.getElementById(`answer-${id}`);
-        const button = answer.parentElement.querySelector('.toggle-btn');
-        answer.classList.toggle('show');
-        button.innerHTML = answer.classList.contains('show')
-            ? '<span class="mr-2">Hide Answer</span><i class="fas fa-chevron-up"></i>'
-            : '<span class="mr-2">Show Answer</span><i class="fas fa-chevron-down"></i>';
-        button.classList.toggle('bg-indigo-800');
-        button.classList.toggle('bg-indigo-600');
-    }
-
-    /* --------- Event listeners ---------- */
-    includeDropdownBtn.addEventListener('click', () => {
-        includeDropdown.classList.toggle('hidden');
-        excludeDropdown.classList.add('hidden'); // close other dropdown
-    });
-
-    excludeDropdownBtn.addEventListener('click', () => {
-        excludeDropdown.classList.toggle('hidden');
-        includeDropdown.classList.add('hidden');
-    });
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!document.getElementById('includeWrapper').contains(e.target)) {
-            includeDropdown.classList.add('hidden');
+        function toggleMenu(id) {
+            document.getElementById(id).classList.toggle('hidden');
         }
-        if (!document.getElementById('excludeWrapper').contains(e.target)) {
-            excludeDropdown.classList.add('hidden');
-        }
-    });
 
-    searchBtn.addEventListener('click', () => {
-        currentFilter.searchTerm = searchInput.value.trim().toLowerCase();
-        renderQuestions();
-    });
+        // Update on inputs
+        document.getElementById('randomCheckbox').addEventListener('change', renderQuestions);
+        document.getElementById('maxQuestions').addEventListener('input', renderQuestions);
 
-    searchInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-            currentFilter.searchTerm = searchInput.value.trim().toLowerCase();
-            renderQuestions();
-        }
-    });
-
-    maxQuestionsInput.addEventListener('change', () => {
-        currentFilter.max = parseInt(maxQuestionsInput.value, 10) || 10;
-        renderQuestions();
-    });
-
-    randomOrderCheckbox.addEventListener('change', () => {
-        currentFilter.random = randomOrderCheckbox.checked;
-        renderQuestions();
-    });
-
-    /* --------- Init ---------- */
-    loadQuestionsFromExcel();
-</script>
+        // INIT
+        loadQuestions();
+    </script>
 </body>
 </html>
