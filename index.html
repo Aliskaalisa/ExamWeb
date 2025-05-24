@@ -9,138 +9,71 @@
     <title>Chemistry Quiz Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .question-card {
-            transition: all 0.3s ease;
-        }
-        .question-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        .answer {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease;
-        }
-        .answer.show {
-            max-height: 500px;
-        }
-        .category-chip {
-            transition: all 0.2s ease;
-        }
-        .category-chip:hover {
-            transform: scale(1.05);
-        }
-        .category-chip.active {
-            transform: scale(1.1);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-indigo-800 mb-2">Chemistry Quiz Master</h1>
-            <p class="text-lg text-gray-600">Test your chemistry knowledge with interactive questions</p>
-            <div class="mt-6">
-                <button id="addQuestionBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium mr-4 transition">
-                    <i class="fas fa-plus mr-2"></i>Add Question
-                </button>
-                <button id="filterBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium transition">
-                    <i class="fas fa-filter mr-2"></i>Filter Questions
-                </button>
-            </div>
-        </header>
-
-        <!-- Filter Section (Hidden by default) -->
-        <div id="filterSection" class="bg-white p-6 rounded-xl shadow-md mb-8 hidden">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Questions</h2>
-            <div class="flex flex-wrap gap-3 mb-6">
-                <span class="category-chip px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full cursor-pointer" data-category="all">All</span>
-                <span class="category-chip px-4 py-2 bg-blue-100 text-blue-800 rounded-full cursor-pointer" data-category="organic">Organic</span>
-                <span class="category-chip px-4 py-2 bg-green-100 text-green-800 rounded-full cursor-pointer" data-category="inorganic">Inorganic</span>
-                <span class="category-chip px-4 py-2 bg-purple-100 text-purple-800 rounded-full cursor-pointer" data-category="physical">Physical</span>
-                <span class="category-chip px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full cursor-pointer" data-category="analytical">Analytical</span>
-                <span class="category-chip px-4 py-2 bg-red-100 text-red-800 rounded-full cursor-pointer" data-category="biochemistry">Biochemistry</span>
-            </div>
-            <div class="flex items-center">
-                <input type="text" id="searchInput" placeholder="Search questions..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <button id="searchBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
+<div class="container mx-auto px-4 py-8">
+    <header class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-indigo-800 mb-2">Chemistry Quiz Master</h1>
+        <p class="text-lg text-gray-600">Test your chemistry knowledge with interactive questions</p>
+        <div class="mt-6">
+            <button id="addQuestionBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium mr-4 transition">
+                <i class="fas fa-plus mr-2"></i>Add Question
+            </button>
+            <button id="filterBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium transition">
+                <i class="fas fa-filter mr-2"></i>Filter Questions
+            </button>
         </div>
+    </header>
 
-        <!-- Add Question Modal (Hidden by default) -->
-        <div id="addQuestionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-            <div class="bg-white rounded-xl p-6 w-full max-w-md">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Add New Question</h2>
-                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form id="questionForm" class="space-y-4">
-                    <div>
-                        <label for="questionText" class="block text-sm font-medium text-gray-700 mb-1">Question</label>
-                        <textarea id="questionText" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
-                    </div>
-                    <div>
-                        <label for="answerText" class="block text-sm font-medium text-gray-700 mb-1">Answer</label>
-                        <textarea id="answerText" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
-                    </div>
-                    <div>
-                        <label for="questionCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <select id="questionCategory" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="organic">Organic</option>
-                            <option value="inorganic">Inorganic</option>
-                            <option value="physical">Physical</option>
-                            <option value="analytical">Analytical</option>
-                            <option value="biochemistry">Biochemistry</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
-                        <select id="difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end space-x-3 pt-2">
-                        <button type="button" id="cancelAddBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Add Question</button>
-                    </div>
-                </form>
-            </div>
+    <div id="filterSection" class="bg-white p-6 rounded-xl shadow-md mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Questions</h2>
+        <div class="flex flex-wrap gap-3 mb-4">
+            <span class="category-chip px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full cursor-pointer" data-category="none">Choose Category</span>
+            <span class="category-chip px-4 py-2 bg-blue-100 text-blue-800 rounded-full cursor-pointer" data-category="organic">Include: Organic</span>
+            <span class="category-chip px-4 py-2 bg-green-100 text-green-800 rounded-full cursor-pointer" data-category="inorganic">Include: Inorganic</span>
+            <span class="category-chip px-4 py-2 bg-purple-100 text-purple-800 rounded-full cursor-pointer" data-category="physical">Include: Physical</span>
+            <span class="category-chip px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full cursor-pointer" data-category="analytical">Include: Analytical</span>
+            <span class="category-chip px-4 py-2 bg-red-100 text-red-800 rounded-full cursor-pointer" data-category="biochemistry">Include: Biochemistry</span>
         </div>
-
-        <!-- Questions Container -->
-        <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Questions will be loaded here -->
+        <div class="flex flex-wrap gap-3 mb-4">
+            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="organic">Exclude: Organic</span>
+            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="inorganic">Exclude: Inorganic</span>
+            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="physical">Exclude: Physical</span>
+            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="analytical">Exclude: Analytical</span>
+            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="biochemistry">Exclude: Biochemistry</span>
         </div>
-
-        <!-- No Results Message (Hidden by default) -->
-        <div id="noResults" class="text-center py-12 hidden">
-            <i class="fas fa-flask text-5xl text-gray-300 mb-4"></i>
-            <h3 class="text-xl font-medium text-gray-500">No questions found matching your criteria</h3>
-            <p class="text-gray-400 mt-2">Try adjusting your filters or add a new question</p>
+        <div class="flex items-center mb-4">
+            <input type="number" id="maxQuestions" min="1" value="10" class="w-24 px-3 py-2 border border-gray-300 rounded-lg mr-4" />
+            <input type="text" id="searchInput" placeholder="Search questions..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <button id="searchBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
     </div>
+
+    <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <div id="noResults" class="text-center py-12">
+        <i class="fas fa-flask text-5xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-medium text-gray-500">No questions found. Select filters to begin.</h3>
+    </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     const questionsContainer = document.getElementById('questionsContainer');
     const noResults = document.getElementById('noResults');
     const categoryChips = document.querySelectorAll('.category-chip');
+    const excludeChips = document.querySelectorAll('.exclude-chip');
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
+    const maxQuestionsInput = document.getElementById('maxQuestions');
 
     let allQuestions = [];
     let currentFilter = {
-        category: 'all',
-        searchTerm: ''
+        include: [],
+        exclude: [],
+        searchTerm: '',
+        max: 10
     };
 
     async function loadQuestionsFromExcel() {
@@ -158,9 +91,7 @@
                     id: index + 1,
                     question: row.question,
                     answer: row.answer,
-                    categories: categories,
-                    difficulty: (row.difficulty || 'easy').toLowerCase(),
-                    dateAdded: new Date().toISOString()
+                    categories: categories
                 };
             });
 
@@ -175,12 +106,13 @@
         questionsContainer.innerHTML = '';
 
         const filtered = allQuestions.filter(q => {
-            const matchCategory = currentFilter.category === 'all' || q.categories.includes(currentFilter.category);
+            const hasInclude = currentFilter.include.length === 0 || q.categories.some(cat => currentFilter.include.includes(cat));
+            const noExclude = !q.categories.some(cat => currentFilter.exclude.includes(cat));
             const matchSearch = !currentFilter.searchTerm ||
                 q.question.toLowerCase().includes(currentFilter.searchTerm) ||
                 q.answer.toLowerCase().includes(currentFilter.searchTerm);
-            return matchCategory && matchSearch;
-        });
+            return hasInclude && noExclude && matchSearch;
+        }).slice(0, currentFilter.max);
 
         if (filtered.length === 0) {
             noResults.classList.remove('hidden');
@@ -190,41 +122,12 @@
         }
 
         filtered.forEach(q => {
-            const categoryColors = {
-                organic: 'bg-blue-100 text-blue-800',
-                inorganic: 'bg-green-100 text-green-800',
-                physical: 'bg-purple-100 text-purple-800',
-                analytical: 'bg-yellow-100 text-yellow-800',
-                biochemistry: 'bg-red-100 text-red-800'
-            };
-            const categoryNames = {
-                organic: 'Organic',
-                inorganic: 'Inorganic',
-                physical: 'Physical',
-                analytical: 'Analytical',
-                biochemistry: 'Biochemistry'
-            };
-            const difficultyColors = {
-                easy: 'bg-green-100 text-green-800',
-                medium: 'bg-yellow-100 text-yellow-800',
-                hard: 'bg-red-100 text-red-800'
-            };
-
-            const categoryTags = q.categories.map(cat => {
-                const color = categoryColors[cat] || 'bg-gray-100 text-gray-800';
-                const name = categoryNames[cat] || cat;
-                return `<span class="px-3 py-1 ${color} text-xs font-semibold rounded-full mr-1">${name}</span>`;
-            }).join('');
-
             const el = document.createElement('div');
             el.className = 'question-card bg-white rounded-xl shadow-md overflow-hidden';
             el.id = `question-${q.id}`;
             el.innerHTML = `
                 <div class="p-6">
-                    <div class="flex justify-between items-start mb-4 flex-wrap">
-                        <div>${categoryTags}</div>
-                        <span class="px-3 py-1 ${difficultyColors[q.difficulty]} text-xs font-semibold rounded-full">${q.difficulty}</span>
-                    </div>
+                    <div class="mb-4">${q.categories.map(cat => `<span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">${cat}</span>`).join('')}</div>
                     <h3 class="text-lg font-medium text-gray-800 mb-4">${q.question}</h3>
                     <div class="answer" id="answer-${q.id}">
                         <div class="bg-gray-50 p-4 rounded-lg">
@@ -246,20 +149,29 @@
         const answer = document.getElementById(`answer-${id}`);
         const button = answer.parentElement.querySelector('button');
         answer.classList.toggle('show');
-        if (answer.classList.contains('show')) {
-            button.innerHTML = '<span class="mr-2">Hide Answer</span><i class="fas fa-chevron-up"></i>';
-            button.classList.replace('bg-indigo-600', 'bg-indigo-800');
-        } else {
-            button.innerHTML = '<span class="mr-2">Show Answer</span><i class="fas fa-chevron-down"></i>';
-            button.classList.replace('bg-indigo-800', 'bg-indigo-600');
-        }
+        button.innerHTML = answer.classList.contains('show')
+            ? '<span class="mr-2">Hide Answer</span><i class="fas fa-chevron-up"></i>'
+            : '<span class="mr-2">Show Answer</span><i class="fas fa-chevron-down"></i>';
+        button.classList.toggle('bg-indigo-800');
+        button.classList.toggle('bg-indigo-600');
     }
 
     categoryChips.forEach(chip => {
         chip.addEventListener('click', () => {
-            categoryChips.forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            currentFilter.category = chip.dataset.category;
+            const cat = chip.dataset.category;
+            if (cat === 'none') {
+                currentFilter.include = [];
+            } else {
+                if (!currentFilter.include.includes(cat)) currentFilter.include.push(cat);
+            }
+            renderQuestions();
+        });
+    });
+
+    excludeChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const cat = chip.dataset.exclude;
+            if (!currentFilter.exclude.includes(cat)) currentFilter.exclude.push(cat);
             renderQuestions();
         });
     });
@@ -274,6 +186,11 @@
             currentFilter.searchTerm = searchInput.value.trim().toLowerCase();
             renderQuestions();
         }
+    });
+
+    maxQuestionsInput.addEventListener('change', () => {
+        currentFilter.max = parseInt(maxQuestionsInput.value, 10) || 10;
+        renderQuestions();
     });
 
     loadQuestionsFromExcel();
