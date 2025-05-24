@@ -32,8 +32,7 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-  <!-- Main wrapper at 70% width with 15% side margins -->
-  <div class="mx-auto w-[70%] px-4 py-8 max-w-none">
+  <div class="container mx-auto px-4 py-8">
     <header class="text-center mb-12">
       <h1 class="text-4xl font-bold text-indigo-800 mb-2">
         Chemistry Quiz Master
@@ -137,7 +136,7 @@
     <!-- ---------------------- QUESTIONS GRID ---------------------- -->
     <div
       id="questionsContainer"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6"
     ></div>
     <div id="noResults" class="text-center py-12 hidden">
       <i class="fas fa-flask text-5xl text-gray-300 mb-4"></i>
@@ -313,4 +312,74 @@
 
     searchInput.addEventListener("keyup", (e) => {
       if (e.key === "Enter") {
-        currentFilter.searchTerm = searchInput.value.trim().
+        currentFilter.searchTerm = searchInput.value.trim().toLowerCase();
+        renderQuestions();
+      }
+    });
+
+    maxQuestionsInput.addEventListener("change", () => {
+      currentFilter.max = parseInt(maxQuestionsInput.value, 10) || 10;
+      renderQuestions();
+    });
+
+    randomOrderCheckbox.addEventListener("change", () => {
+      currentFilter.random = randomOrderCheckbox.checked;
+      renderQuestions();
+    });
+
+    /******************** LOAD QUESTIONS FROM EXCEL *************************/
+    async function loadQuestionsFromExcel() {
+      try {
+        const res = await fetch("DB.xlsx");
+        const data = await res.arrayBuffer();
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        allQuestions = json.map((row, index) => {
+          const rawCategories = row.category || "general";
+          const categories = rawCategories
+            .split(",")
+            .map((c) => c.trim().toLowerCase());
+          return {
+            id: index + 1,
+            question: row.question,
+            answer: row.answer,
+            categories,
+          };
+        });
+
+        // Build list of unique categories
+        const categorySet = new Set();
+        allQuestions.forEach((q) => q.categories.forEach((cat) => categorySet.add(cat)));
+        const categoryList = Array.from(categorySet).sort();
+
+        // Build dropdowns
+        buildDropdown(
+          includeToggle,
+          includeOptions,
+          categoryList,
+          "include",
+          "none"
+        );
+        buildDropdown(
+          excludeToggle,
+          excludeOptions,
+          categoryList,
+          "exclude",
+          "none"
+        );
+
+        // Initial render
+        renderQuestions();
+      } catch (error) {
+        console.error("Failed to load Excel file:", error);
+        questionsContainer.innerHTML = `<p class="text-red-600 text-center">Failed to load questions. Check DB.xlsx file.</p>`;
+      }
+    }
+
+    /******************** INIT *************************/
+    loadQuestionsFromExcel();
+  </script>
+</body>
+</html>
