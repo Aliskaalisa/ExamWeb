@@ -126,34 +126,20 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     const questionsContainer = document.getElementById('questionsContainer');
     const noResults = document.getElementById('noResults');
-
     let allQuestions = [];
 
-    document.body.insertAdjacentHTML('beforeend', `
-        <div class="text-center my-8">
-            <input type="file" id="fileInput" accept=".xlsx" class="hidden" />
-            <button onclick="document.getElementById('fileInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium transition">
-                <i class="fas fa-upload mr-2"></i>Load Questions from Excel
-            </button>
-        </div>
-    `);
-
-    document.getElementById('fileInput').addEventListener('change', function (e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: "array" });
+    async function loadQuestionsFromExcel() {
+        try {
+            const res = await fetch('DB.xlsx');
+            const data = await res.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(sheet);
 
-            // Expected columns: question, answer, category, difficulty
             allQuestions = json.map((row, index) => ({
                 id: index + 1,
                 question: row.question,
@@ -163,24 +149,24 @@
                 dateAdded: new Date().toISOString()
             }));
 
-            localStorage.setItem('chemistryQuestions', JSON.stringify(allQuestions));
             renderQuestions();
-        };
-        reader.readAsArrayBuffer(file);
-    });
+        } catch (error) {
+            console.error('Failed to load Excel file:', error);
+            questionsContainer.innerHTML = `<p class="text-red-600 text-center">Failed to load questions. Check DB.xlsx file.</p>`;
+        }
+    }
 
     function renderQuestions() {
-        const questions = allQuestions.length ? allQuestions : JSON.parse(localStorage.getItem('chemistryQuestions') || '[]');
         questionsContainer.innerHTML = '';
 
-        if (questions.length === 0) {
+        if (allQuestions.length === 0) {
             noResults.classList.remove('hidden');
             return;
         } else {
             noResults.classList.add('hidden');
         }
 
-        questions.forEach(q => {
+        allQuestions.forEach(q => {
             const categoryColors = {
                 organic: 'bg-blue-100 text-blue-800',
                 inorganic: 'bg-green-100 text-green-800',
@@ -227,7 +213,7 @@
         });
     }
 
-    function toggleAnswer(id) {
+    window.toggleAnswer = function(id) {
         const answer = document.getElementById(`answer-${id}`);
         const button = answer.parentElement.querySelector('button');
         answer.classList.toggle('show');
@@ -238,9 +224,9 @@
             button.innerHTML = '<span class="mr-2">Show Answer</span><i class="fas fa-chevron-down"></i>';
             button.classList.replace('bg-indigo-800', 'bg-indigo-600');
         }
-    }
+    };
 
-    renderQuestions(); // Load existing if any
+    loadQuestionsFromExcel();
 </script>
 </body>
 </html>
