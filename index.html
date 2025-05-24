@@ -130,7 +130,15 @@
 <script>
     const questionsContainer = document.getElementById('questionsContainer');
     const noResults = document.getElementById('noResults');
+    const categoryChips = document.querySelectorAll('.category-chip');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+
     let allQuestions = [];
+    let currentFilter = {
+        category: 'all',
+        searchTerm: ''
+    };
 
     async function loadQuestionsFromExcel() {
         try {
@@ -140,14 +148,18 @@
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(sheet);
 
-            allQuestions = json.map((row, index) => ({
-                id: index + 1,
-                question: row.question,
-                answer: row.answer,
-                category: row.category || "organic",
-                difficulty: row.difficulty || "easy",
-                dateAdded: new Date().toISOString()
-            }));
+            allQuestions = json.map((row, index) => {
+                const rawCategories = row.category || 'organic';
+                const categories = rawCategories.split(',').map(c => c.trim().toLowerCase());
+                return {
+                    id: index + 1,
+                    question: row.question,
+                    answer: row.answer,
+                    categories: categories,
+                    difficulty: (row.difficulty || 'easy').toLowerCase(),
+                    dateAdded: new Date().toISOString()
+                };
+            });
 
             renderQuestions();
         } catch (error) {
@@ -159,25 +171,28 @@
     function renderQuestions() {
         questionsContainer.innerHTML = '';
 
-        if (allQuestions.length === 0) {
+        const filtered = allQuestions.filter(q => {
+            const matchCategory = currentFilter.category === 'all' || q.categories.includes(currentFilter.category);
+            const matchSearch = !currentFilter.searchTerm ||
+                q.question.toLowerCase().includes(currentFilter.searchTerm) ||
+                q.answer.toLowerCase().includes(currentFilter.searchTerm);
+            return matchCategory && matchSearch;
+        });
+
+        if (filtered.length === 0) {
             noResults.classList.remove('hidden');
             return;
         } else {
             noResults.classList.add('hidden');
         }
 
-        allQuestions.forEach(q => {
+        filtered.forEach(q => {
             const categoryColors = {
                 organic: 'bg-blue-100 text-blue-800',
                 inorganic: 'bg-green-100 text-green-800',
                 physical: 'bg-purple-100 text-purple-800',
                 analytical: 'bg-yellow-100 text-yellow-800',
                 biochemistry: 'bg-red-100 text-red-800'
-            };
-            const difficultyColors = {
-                easy: 'bg-green-100 text-green-800',
-                medium: 'bg-yellow-100 text-yellow-800',
-                hard: 'bg-red-100 text-red-800'
             };
             const categoryNames = {
                 organic: 'Organic Chemistry',
@@ -186,14 +201,25 @@
                 analytical: 'Analytical Chemistry',
                 biochemistry: 'Biochemistry'
             };
+            const difficultyColors = {
+                easy: 'bg-green-100 text-green-800',
+                medium: 'bg-yellow-100 text-yellow-800',
+                hard: 'bg-red-100 text-red-800'
+            };
+
+            const categoryTags = q.categories.map(cat => {
+                const color = categoryColors[cat] || 'bg-gray-100 text-gray-800';
+                const name = categoryNames[cat] || cat;
+                return `<span class="px-3 py-1 ${color} text-xs font-semibold rounded-full mr-1">${name}</span>`;
+            }).join('');
 
             const el = document.createElement('div');
             el.className = 'question-card bg-white rounded-xl shadow-md overflow-hidden';
             el.id = `question-${q.id}`;
             el.innerHTML = `
                 <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="px-3 py-1 ${categoryColors[q.category]} text-xs font-semibold rounded-full">${categoryNames[q.category]}</span>
+                    <div class="flex justify-between items-start mb-4 flex-wrap">
+                        <div>${categoryTags}</div>
                         <span class="px-3 py-1 ${difficultyColors[q.difficulty]} text-xs font-semibold rounded-full">${q.difficulty}</span>
                     </div>
                     <h3 class="text-lg font-medium text-gray-800 mb-4">${q.question}</h3>
@@ -213,7 +239,7 @@
         });
     }
 
-    window.toggleAnswer = function(id) {
+    function toggleAnswer(id) {
         const answer = document.getElementById(`answer-${id}`);
         const button = answer.parentElement.querySelector('button');
         answer.classList.toggle('show');
@@ -224,7 +250,28 @@
             button.innerHTML = '<span class="mr-2">Show Answer</span><i class="fas fa-chevron-down"></i>';
             button.classList.replace('bg-indigo-800', 'bg-indigo-600');
         }
-    };
+    }
+
+    categoryChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            categoryChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            currentFilter.category = chip.dataset.category;
+            renderQuestions();
+        });
+    });
+
+    searchBtn.addEventListener('click', () => {
+        currentFilter.searchTerm = searchInput.value.trim().toLowerCase();
+        renderQuestions();
+    });
+
+    searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            currentFilter.searchTerm = searchInput.value.trim().toLowerCase();
+            renderQuestions();
+        }
+    });
 
     loadQuestionsFromExcel();
 </script>
