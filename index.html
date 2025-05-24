@@ -15,35 +15,39 @@
     <header class="text-center mb-12">
         <h1 class="text-4xl font-bold text-indigo-800 mb-2">Chemistry Quiz Master</h1>
         <p class="text-lg text-gray-600">Test your chemistry knowledge with interactive questions</p>
-        <div class="mt-6">
-            <button id="addQuestionBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium mr-4 transition">
-                <i class="fas fa-plus mr-2"></i>Add Question
-            </button>
-            <button id="filterBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium transition">
-                <i class="fas fa-filter mr-2"></i>Filter Questions
-            </button>
-        </div>
     </header>
 
     <div id="filterSection" class="bg-white p-6 rounded-xl shadow-md mb-8">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Questions</h2>
-        <div class="flex flex-wrap gap-3 mb-4">
-            <span class="category-chip px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full cursor-pointer" data-category="none">Choose Category</span>
-            <span class="category-chip px-4 py-2 bg-blue-100 text-blue-800 rounded-full cursor-pointer" data-category="organic">Include: Organic</span>
-            <span class="category-chip px-4 py-2 bg-green-100 text-green-800 rounded-full cursor-pointer" data-category="inorganic">Include: Inorganic</span>
-            <span class="category-chip px-4 py-2 bg-purple-100 text-purple-800 rounded-full cursor-pointer" data-category="physical">Include: Physical</span>
-            <span class="category-chip px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full cursor-pointer" data-category="analytical">Include: Analytical</span>
-            <span class="category-chip px-4 py-2 bg-red-100 text-red-800 rounded-full cursor-pointer" data-category="biochemistry">Include: Biochemistry</span>
+        <div class="flex gap-4 mb-4">
+            <div>
+                <label for="includeSelect" class="block text-sm font-medium text-gray-700 mb-1">Choose category</label>
+                <select id="includeSelect" class="w-52 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">-- none --</option>
+                    <option value="organic">Organic</option>
+                    <option value="inorganic">Inorganic</option>
+                    <option value="physical">Physical</option>
+                    <option value="analytical">Analytical</option>
+                    <option value="biochemistry">Biochemistry</option>
+                </select>
+            </div>
+            <div>
+                <label for="excludeSelect" class="block text-sm font-medium text-gray-700 mb-1">Exclude category</label>
+                <select id="excludeSelect" class="w-52 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">-- none --</option>
+                    <option value="organic">Organic</option>
+                    <option value="inorganic">Inorganic</option>
+                    <option value="physical">Physical</option>
+                    <option value="analytical">Analytical</option>
+                    <option value="biochemistry">Biochemistry</option>
+                </select>
+            </div>
+            <div>
+                <label for="maxQuestions" class="block text-sm font-medium text-gray-700 mb-1">Max Questions</label>
+                <input type="number" id="maxQuestions" min="1" value="10" class="w-24 px-3 py-2 border border-gray-300 rounded-md">
+            </div>
         </div>
-        <div class="flex flex-wrap gap-3 mb-4">
-            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="organic">Exclude: Organic</span>
-            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="inorganic">Exclude: Inorganic</span>
-            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="physical">Exclude: Physical</span>
-            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="analytical">Exclude: Analytical</span>
-            <span class="exclude-chip px-4 py-2 bg-gray-200 text-gray-800 rounded-full cursor-pointer" data-exclude="biochemistry">Exclude: Biochemistry</span>
-        </div>
-        <div class="flex items-center mb-4">
-            <input type="number" id="maxQuestions" min="1" value="10" class="w-24 px-3 py-2 border border-gray-300 rounded-lg mr-4" />
+        <div class="flex items-center">
             <input type="text" id="searchInput" placeholder="Search questions..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <button id="searchBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
                 <i class="fas fa-search"></i>
@@ -62,11 +66,11 @@
 <script>
     const questionsContainer = document.getElementById('questionsContainer');
     const noResults = document.getElementById('noResults');
-    const categoryChips = document.querySelectorAll('.category-chip');
-    const excludeChips = document.querySelectorAll('.exclude-chip');
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const maxQuestionsInput = document.getElementById('maxQuestions');
+    const includeSelect = document.getElementById('includeSelect');
+    const excludeSelect = document.getElementById('excludeSelect');
 
     let allQuestions = [];
     let currentFilter = {
@@ -156,24 +160,16 @@
         button.classList.toggle('bg-indigo-600');
     }
 
-    categoryChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            const cat = chip.dataset.category;
-            if (cat === 'none') {
-                currentFilter.include = [];
-            } else {
-                if (!currentFilter.include.includes(cat)) currentFilter.include.push(cat);
-            }
-            renderQuestions();
-        });
+    includeSelect.addEventListener('change', () => {
+        const val = includeSelect.value;
+        currentFilter.include = val ? [val] : [];
+        renderQuestions();
     });
 
-    excludeChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            const cat = chip.dataset.exclude;
-            if (!currentFilter.exclude.includes(cat)) currentFilter.exclude.push(cat);
-            renderQuestions();
-        });
+    excludeSelect.addEventListener('change', () => {
+        const val = excludeSelect.value;
+        currentFilter.exclude = val ? [val] : [];
+        renderQuestions();
     });
 
     searchBtn.addEventListener('click', () => {
