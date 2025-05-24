@@ -16,26 +16,41 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-<div class="container mx-auto px-4 py-8">
+<!-- main wrapper at 70% width -->
+<div class="mx-auto px-4 py-8" style="width:70%;">
     <header class="text-center mb-12">
         <h1 class="text-4xl font-bold text-indigo-800 mb-2">Chemistry Quiz Master</h1>
         <p class="text-lg text-gray-600">Test your chemistry knowledge with interactive questions</p>
     </header>
 
+    <!-- Filter Panel -->
     <div id="filterSection" class="bg-white p-6 rounded-xl shadow-md mb-8">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Questions</h2>
         <div class="flex flex-wrap gap-4 mb-4">
-            <div>
-                <label for="includeSelect" class="block text-sm font-medium text-gray-700 mb-1">Choose category</label>
-                <select id="includeSelect" multiple size="6" class="w-52 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            <!-- Include Category Multi‑Select -->
+            <div class="relative" id="includeWrapper">
+                <label for="includeDropdownBtn" class="block text-sm font-medium text-gray-700 mb-1">Choose category</label>
+                <button id="includeDropdownBtn" type="button" class="w-52 px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <span id="includeDropdownLabel" class="truncate text-left">All</span>
+                    <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
+                </button>
+                <div id="includeDropdown" class="absolute z-10 mt-1 w-52 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
             </div>
-            <div>
-                <label for="excludeSelect" class="block text-sm font-medium text-gray-700 mb-1">Exclude category</label>
-                <select id="excludeSelect" multiple size="6" class="w-52 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+
+            <!-- Exclude Category Multi‑Select -->
+            <div class="relative" id="excludeWrapper">
+                <label for="excludeDropdownBtn" class="block text-sm font-medium text-gray-700 mb-1">Exclude category</label>
+                <button id="excludeDropdownBtn" type="button" class="w-52 px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <span id="excludeDropdownLabel" class="truncate text-left">None</span>
+                    <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
+                </button>
+                <div id="excludeDropdown" class="absolute z-10 mt-1 w-52 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
             </div>
+
+            <!-- Max Questions -->
             <div>
                 <label for="maxQuestions" class="block text-sm font-medium text-gray-700 mb-1">Max Questions</label>
-                <input type="number" id="maxQuestions" min="1" value="10" class="w-24 px-3 py-2 border border-gray-300 rounded-md" />
+                <input type="number" id="maxQuestions" min="1" value="10" class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
         </div>
         <div class="flex items-center">
@@ -46,6 +61,7 @@
         </div>
     </div>
 
+    <!-- Questions Grid -->
     <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6"></div>
     <div id="noResults" class="text-center py-12 hidden">
         <i class="fas fa-flask text-5xl text-gray-300 mb-4"></i>
@@ -56,16 +72,23 @@
 <!-- XLSX library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-    const questionsContainer = document.getElementById('questionsContainer');
-    const noResults = document.getElementById('noResults');
-    const searchInput = document.getElementById('searchInput');
-    const searchBtn = document.getElementById('searchBtn');
-    const maxQuestionsInput = document.getElementById('maxQuestions');
-    const includeSelect = document.getElementById('includeSelect');
-    const excludeSelect = document.getElementById('excludeSelect');
+    const questionsContainer   = document.getElementById('questionsContainer');
+    const noResults            = document.getElementById('noResults');
+    const searchInput          = document.getElementById('searchInput');
+    const searchBtn            = document.getElementById('searchBtn');
+    const maxQuestionsInput    = document.getElementById('maxQuestions');
+
+    // Multi‑select elements
+    const includeDropdownBtn   = document.getElementById('includeDropdownBtn');
+    const includeDropdown      = document.getElementById('includeDropdown');
+    const includeDropdownLabel = document.getElementById('includeDropdownLabel');
+
+    const excludeDropdownBtn   = document.getElementById('excludeDropdownBtn');
+    const excludeDropdown      = document.getElementById('excludeDropdown');
+    const excludeDropdownLabel = document.getElementById('excludeDropdownLabel');
 
     let allQuestions = [];
-    let currentFilter = {
+    const currentFilter = {
         include: [],
         exclude: [],
         searchTerm: '',
@@ -73,22 +96,58 @@
     };
 
     /* --------- Helpers ---------- */
-    const getSelectedValues = (selectEl) => Array.from(selectEl.selectedOptions).map(o => o.value).filter(v => v);
+    const updateDropdownLabel = (labelEl, arr, emptyText) => {
+        if (arr.length === 0) {
+            labelEl.textContent = emptyText;
+        } else if (arr.length === 1) {
+            labelEl.textContent = arr[0];
+        } else {
+            labelEl.textContent = `${arr.length} selected`;
+        }
+    };
 
-    const populateCategorySelects = (categories) => {
-        // Clear old options
-        includeSelect.innerHTML = '';
-        excludeSelect.innerHTML = '';
+    const createCheckboxItem = (cat, group) => {
+        const safeId = `${group}-${cat.replace(/\s+/g, '_')}`;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'px-4 py-2 hover:bg-gray-100 flex items-center gap-2';
+        wrapper.innerHTML = `
+            <input type="checkbox" id="${safeId}" value="${cat}" class="cursor-pointer">
+            <label for="${safeId}" class="text-sm cursor-pointer select-none">${cat}</label>
+        `;
+        return wrapper;
+    };
 
-        // Option to select none (will be unselected when others clicked)
-        const noneOptionInc = new Option('-- none --', '');
-        includeSelect.appendChild(noneOptionInc);
-        const noneOptionExc = new Option('-- none --', '');
-        excludeSelect.appendChild(noneOptionExc);
+    /* --------- Populate Categories ---------- */
+    const populateCategoryDropdowns = (categories) => {
+        includeDropdown.innerHTML = '';
+        excludeDropdown.innerHTML = '';
 
         categories.forEach(cat => {
-            includeSelect.appendChild(new Option(cat, cat));
-            excludeSelect.appendChild(new Option(cat, cat));
+            /* Include list */
+            const incItem = createCheckboxItem(cat, 'inc');
+            incItem.querySelector('input').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    currentFilter.include.push(cat);
+                } else {
+                    currentFilter.include = currentFilter.include.filter(c => c !== cat);
+                }
+                updateDropdownLabel(includeDropdownLabel, currentFilter.include, 'All');
+                renderQuestions();
+            });
+            includeDropdown.appendChild(incItem);
+
+            /* Exclude list */
+            const excItem = createCheckboxItem(cat, 'exc');
+            excItem.querySelector('input').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    currentFilter.exclude.push(cat);
+                } else {
+                    currentFilter.exclude = currentFilter.exclude.filter(c => c !== cat);
+                }
+                updateDropdownLabel(excludeDropdownLabel, currentFilter.exclude, 'None');
+                renderQuestions();
+            });
+            excludeDropdown.appendChild(excItem);
         });
     };
 
@@ -112,10 +171,10 @@
                 };
             });
 
-            // Derive unique sorted category list and populate selects
+            // Unique sorted categories
             const categorySet = new Set();
             allQuestions.forEach(q => q.categories.forEach(cat => categorySet.add(cat)));
-            populateCategorySelects(Array.from(categorySet).sort());
+            populateCategoryDropdowns(Array.from(categorySet).sort());
 
             renderQuestions();
         } catch (error) {
@@ -181,14 +240,24 @@
     }
 
     /* --------- Event listeners ---------- */
-    includeSelect.addEventListener('change', () => {
-        currentFilter.include = getSelectedValues(includeSelect);
-        renderQuestions();
+    includeDropdownBtn.addEventListener('click', () => {
+        includeDropdown.classList.toggle('hidden');
+        excludeDropdown.classList.add('hidden'); // close other dropdown
     });
 
-    excludeSelect.addEventListener('change', () => {
-        currentFilter.exclude = getSelectedValues(excludeSelect);
-        renderQuestions();
+    excludeDropdownBtn.addEventListener('click', () => {
+        excludeDropdown.classList.toggle('hidden');
+        includeDropdown.classList.add('hidden');
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!document.getElementById('includeWrapper').contains(e.target)) {
+            includeDropdown.classList.add('hidden');
+        }
+        if (!document.getElementById('excludeWrapper').contains(e.target)) {
+            excludeDropdown.classList.add('hidden');
+        }
     });
 
     searchBtn.addEventListener('click', () => {
