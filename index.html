@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .question-card {
+            transition: all 0.3s ease;
+        }
+        .question-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+        .answer.show {
+            max-height: 500px;
+        }
+        .category-chip {
+            transition: all 0.2s ease;
+        }
+        .category-chip:hover {
+            transform: scale(1.05);
+        }
+        .category-chip.active {
+            transform: scale(1.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">Chemistry Quiz Master</h1>
+            <p class="text-lg text-gray-600">Test your chemistry knowledge with interactive questions</p>
+            <div class="mt-6">
+                <button id="addQuestionBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium mr-4 transition">
+                    <i class="fas fa-plus mr-2"></i>Add Question
+                </button>
+                <button id="filterBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium transition">
+                    <i class="fas fa-filter mr-2"></i>Filter Questions
+                </button>
+            </div>
+        </header>
+
+        <!-- Filter Section (Hidden by default) -->
+        <div id="filterSection" class="bg-white p-6 rounded-xl shadow-md mb-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Questions</h2>
+            <div class="flex flex-wrap gap-3 mb-6">
+                <span class="category-chip px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full cursor-pointer" data-category="all">All</span>
+                <span class="category-chip px-4 py-2 bg-blue-100 text-blue-800 rounded-full cursor-pointer" data-category="organic">Organic Chemistry</span>
+                <span class="category-chip px-4 py-2 bg-green-100 text-green-800 rounded-full cursor-pointer" data-category="inorganic">Inorganic Chemistry</span>
+                <span class="category-chip px-4 py-2 bg-purple-100 text-purple-800 rounded-full cursor-pointer" data-category="physical">Physical Chemistry</span>
+                <span class="category-chip px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full cursor-pointer" data-category="analytical">Analytical Chemistry</span>
+                <span class="category-chip px-4 py-2 bg-red-100 text-red-800 rounded-full cursor-pointer" data-category="biochemistry">Biochemistry</span>
+            </div>
+            <div class="flex items-center">
+                <input type="text" id="searchInput" placeholder="Search questions..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button id="searchBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Question Modal (Hidden by default) -->
+        <div id="addQuestionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Add New Question</h2>
+                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="questionForm" class="space-y-4">
+                    <div>
+                        <label for="questionText" class="block text-sm font-medium text-gray-700 mb-1">Question</label>
+                        <textarea id="questionText" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
+                    </div>
+                    <div>
+                        <label for="answerText" class="block text-sm font-medium text-gray-700 mb-1">Answer</label>
+                        <textarea id="answerText" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
+                    </div>
+                    <div>
+                        <label for="questionCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select id="questionCategory" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="organic">Organic Chemistry</option>
+                            <option value="inorganic">Inorganic Chemistry</option>
+                            <option value="physical">Physical Chemistry</option>
+                            <option value="analytical">Analytical Chemistry</option>
+                            <option value="biochemistry">Biochemistry</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                        <select id="difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="button" id="cancelAddBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Add Question</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Questions Container -->
+        <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Questions will be loaded here -->
+        </div>
+
+        <!-- No Results Message (Hidden by default) -->
+        <div id="noResults" class="text-center py-12 hidden">
+            <i class="fas fa-flask text-5xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-medium text-gray-500">No questions found matching your criteria</h3>
+            <p class="text-gray-400 mt-2">Try adjusting your filters or add a new question</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize database if not exists
+        if (!localStorage.getItem('chemistryQuestions')) {
+            const initialQuestions = [
+                {
+                    id: 1,
+                    question: "What is the pH value of pure water at 25°C?",
+                    answer: "The pH value of pure water at 25°C is 7, which is considered neutral. This is because the concentration of hydrogen ions (H⁺) equals the concentration of hydroxide ions (OH⁻) at this temperature.",
+                    category: "physical",
+                    difficulty: "easy",
+                    dateAdded: new Date().toISOString()
+                },
+                {
+                    id: 2,
+                    question: "What is the difference between an aldehyde and a ketone?",
+                    answer: "Both aldehydes and ketones contain a carbonyl group (C=O). The key difference is that in aldehydes, the carbonyl group is at the end of a carbon chain (R-CHO), while in ketones, it's in the middle of the chain (R-CO-R'). Aldehydes are typically more reactive than ketones due to the presence of a hydrogen atom attached to the carbonyl carbon.",
+                    category: "organic",
+                    difficulty: "medium",
+                    dateAdded: new Date().toISOString()
+                },
+                {
+                    id: 3,
+                    question: "What is the Aufbau principle in chemistry?",
+                    answer: "The Aufbau principle states that electrons occupy atomic orbitals of the lowest available energy levels before occupying higher levels. This principle helps explain the electron configuration of atoms. 'Aufbau' is German for 'building up', reflecting how electrons build up the electron configuration of an atom.",
+                    category: "inorganic",
+                    difficulty: "medium",
+                    dateAdded: new Date().toISOString()
+                },
+                {
+                    id: 4,
+                    question: "What is the Henderson-Hasselbalch equation and what is it used for?",
+                    answer: "The Henderson-Hasselbalch equation is: pH = pKa + log([A⁻]/[HA]). It relates the pH of a solution to the pKa (acid dissociation constant) and the ratio of the concentrations of the deprotonated (A⁻) and protonated (HA) forms of an acid. It's commonly used in biochemistry and analytical chemistry to calculate the pH of buffer solutions and to predict the charge state of ionizable groups in molecules like amino acids.",
+                    category: "analytical",
+                    difficulty: "hard",
+                    dateAdded: new Date().toISOString()
+                },
+                {
+                    id: 5,
+                    question: "What is the difference between competitive and non-competitive enzyme inhibition?",
+                    answer: "Competitive inhibition occurs when an inhibitor molecule competes with the substrate for binding to the active site of the enzyme. This can be overcome by increasing substrate concentration. Non-competitive inhibition occurs when the inhibitor binds to an allosteric site (not the active site), changing the enzyme's conformation and reducing its activity. This cannot be overcome by increasing substrate concentration.",
+                    category: "biochemistry",
+                    difficulty: "hard",
+                    dateAdded: new Date().toISOString()
+                },
+                {
+                    id: 6,
+                    question: "What is the ideal gas law equation?",
+                    answer: "The ideal gas law is expressed as PV = nRT, where P is pressure, V is volume, n is the number of moles of gas, R is the universal gas constant (8.314 J/mol·K), and T is temperature in Kelvin. This equation describes the relationship between these variables for an ideal gas, which assumes no intermolecular forces and perfectly elastic collisions.",
+                    category: "physical",
+                    difficulty: "easy",
+                    dateAdded: new Date().toISOString()
+                }
+            ];
+            localStorage.setItem('chemistryQuestions', JSON.stringify(initialQuestions));
+        }
+
+        // DOM Elements
+        const questionsContainer = document.getElementById('questionsContainer');
+        const filterSection = document.getElementById('filterSection');
+        const filterBtn = document.getElementById('filterBtn');
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+        const addQuestionModal = document.getElementById('addQuestionModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelAddBtn = document.getElementById('cancelAddBtn');
+        const questionForm = document.getElementById('questionForm');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const noResults = document.getElementById('noResults');
+        const categoryChips = document.querySelectorAll('.category-chip');
+
+        // Current filter state
+        let currentFilter = {
+            category: 'all',
+            searchTerm: '',
+            difficulty: 'all'
+        };
+
+        // Event Listeners
+        filterBtn.addEventListener('click', toggleFilterSection);
+        addQuestionBtn.addEventListener('click', showAddQuestionModal);
+        closeModalBtn.addEventListener('click', hideAddQuestionModal);
+        cancelAddBtn.addEventListener('click', hideAddQuestionModal);
+        questionForm.addEventListener('submit', handleAddQuestion);
+        searchBtn.addEventListener('click', applySearchFilter);
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') applySearchFilter();
+        });
+
+        // Add event listeners to category chips
+        categoryChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                // Remove active class from all chips
+                categoryChips.forEach(c => c.classList.remove('active'));
+                // Add active class to clicked chip
+                chip.classList.add('active');
+                
+                const category = chip.dataset.category;
+                currentFilter.category = category;
+                renderQuestions();
+            });
+        });
+
+        // Set 'all' as active by default
+        document.querySelector('.category-chip[data-category="all"]').classList.add('active');
+
+        // Functions
+        function toggleFilterSection() {
+            filterSection.classList.toggle('hidden');
+            if (!filterSection.classList.contains('hidden')) {
+                filterSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function showAddQuestionModal() {
+            addQuestionModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideAddQuestionModal() {
+            addQuestionModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            questionForm.reset();
+        }
+
+        function handleAddQuestion(e) {
+            e.preventDefault();
+            
+            const questionText = document.getElementById('questionText').value;
+            const answerText = document.getElementById('answerText').value;
+            const category = document.getElementById('questionCategory').value;
+            const difficulty = document.getElementById('difficulty').value;
+            
+            // Get current questions
+            const questions = JSON.parse(localStorage.getItem('chemistryQuestions'));
+            
+            // Create new question
+            const newQuestion = {
+                id: questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1,
+                question: questionText,
+                answer: answerText,
+                category: category,
+                difficulty: difficulty,
+                dateAdded: new Date().toISOString()
+            };
+            
+            // Add to array and save
+            questions.push(newQuestion);
+            localStorage.setItem('chemistryQuestions', JSON.stringify(questions));
+            
+            // Hide modal and refresh questions
+            hideAddQuestionModal();
+            renderQuestions();
+            
+            // Scroll to the new question
+            setTimeout(() => {
+                const newQuestionElement = document.getElementById(`question-${newQuestion.id}`);
+                if (newQuestionElement) {
+                    newQuestionElement.scrollIntoView({ behavior: 'smooth' });
+                    // Add highlight animation
+                    newQuestionElement.classList.add('ring-2', 'ring-green-500');
+                    setTimeout(() => {
+                        newQuestionElement.classList.remove('ring-2', 'ring-green-500');
+                    }, 2000);
+                }
+            }, 100);
+        }
+
+        function applySearchFilter() {
+            currentFilter.searchTerm = searchInput.value.trim().toLowerCase();
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const questions = JSON.parse(localStorage.getItem('chemistryQuestions'));
+            
+            // Filter questions based on current filter
+            let filteredQuestions = questions.filter(q => {
+                // Category filter
+                if (currentFilter.category !== 'all' && q.category !== currentFilter.category) {
+                    return false;
+                }
+                
+                // Search filter
+                if (currentFilter.searchTerm && 
+                    !q.question.toLowerCase().includes(currentFilter.searchTerm) && 
+                    !q.answer.toLowerCase().includes(currentFilter.searchTerm)) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Sort by date added (newest first)
+            filteredQuestions.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+            
+            // Clear container
+            questionsContainer.innerHTML = '';
+            
+            // Show no results message if no questions
+            if (filteredQuestions.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+            
+            // Render each question
+            filteredQuestions.forEach(q => {
+                const categoryColors = {
+                    organic: 'bg-blue-100 text-blue-800',
+                    inorganic: 'bg-green-100 text-green-800',
+                    physical: 'bg-purple-100 text-purple-800',
+                    analytical: 'bg-yellow-100 text-yellow-800',
+                    biochemistry: 'bg-red-100 text-red-800'
+                };
+                
+                const difficultyColors = {
+                    easy: 'bg-green-100 text-green-800',
+                    medium: 'bg-yellow-100 text-yellow-800',
+                    hard: 'bg-red-100 text-red-800'
+                };
+                
+                const categoryNames = {
+                    organic: 'Organic Chemistry',
+                    inorganic: 'Inorganic Chemistry',
+                    physical: 'Physical Chemistry',
+                    analytical: 'Analytical Chemistry',
+                    biochemistry: 'Biochemistry'
+                };
+                
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-card bg-white rounded-xl shadow-md overflow-hidden';
+                questionElement.id = `question-${q.id}`;
+                
+                questionElement.innerHTML = `
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-3 py-1 ${categoryColors[q.category]} text-xs font-semibold rounded-full">${categoryNames[q.category]}</span>
+                            <span class="px-3 py-1 ${difficultyColors[q.difficulty]} text-xs font-semibold rounded-full">${q.difficulty}</span>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">${q.question}</h3>
+                        <div class="answer" id="answer-${q.id}">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-sm font-semibold text-gray-500 mb-2">Answer:</h4>
+                                <p class="text-gray-700">${q.answer}</p>
+                            </div>
+                        </div>
+                        <button onclick="toggleAnswer(${q.id})" class="mt-4 w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+                            <span class="mr-2">Show Answer</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                `;
+                
+                questionsContainer.appendChild(questionElement);
+            });
+        }
+
+        // Global function to toggle answer visibility
+        window.toggleAnswer = function(id) {
+            const answer = document.getElementById(`answer-${id}`);
+            const button = answer.parentElement.querySelector('button');
+            
+            answer.classList.toggle('show');
+            
+            if (answer.classList.contains('show')) {
+                button.innerHTML = '<span class="mr-2">Hide Answer</span><i class="fas fa-chevron-up"></i>';
+                button.classList.remove('bg-indigo-600');
+                button.classList.add('bg-indigo-800');
+            } else {
+                button.innerHTML = '<span class="mr-2">Show Answer</span><i class="fas fa-chevron-down"></i>';
+                button.classList.remove('bg-indigo-800');
+                button.classList.add('bg-indigo-600');
+            }
+        };
+
+        // Initial render
+        renderQuestions();
+    </script>
+</body>
+</html>
