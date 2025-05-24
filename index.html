@@ -52,6 +52,14 @@
                 <label for="maxQuestions" class="block text-sm font-medium text-gray-700 mb-1">Max Questions</label>
                 <input type="number" id="maxQuestions" min="1" value="10" class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
+
+            <!-- Random Order Checkbox -->
+            <div class="flex items-end">
+                <div class="flex items-center h-9">
+                    <input type="checkbox" id="randomOrder" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2">
+                    <label for="randomOrder" class="text-sm font-medium text-gray-700 select-none">Random order</label>
+                </div>
+            </div>
         </div>
         <div class="flex items-center">
             <input type="text" id="searchInput" placeholder="Search questions..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -62,7 +70,7 @@
     </div>
 
     <!-- Questions Grid -->
-    <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6"></div>
+    <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     <div id="noResults" class="text-center py-12 hidden">
         <i class="fas fa-flask text-5xl text-gray-300 mb-4"></i>
         <h3 class="text-xl font-medium text-gray-500">No questions found. Select filters to begin.</h3>
@@ -77,6 +85,7 @@
     const searchInput          = document.getElementById('searchInput');
     const searchBtn            = document.getElementById('searchBtn');
     const maxQuestionsInput    = document.getElementById('maxQuestions');
+    const randomOrderCheckbox  = document.getElementById('randomOrder');
 
     // Multi‑select elements
     const includeDropdownBtn   = document.getElementById('includeDropdownBtn');
@@ -92,7 +101,8 @@
         include: [],
         exclude: [],
         searchTerm: '',
-        max: 10
+        max: 10,
+        random: false
     };
 
     /* --------- Helpers ---------- */
@@ -187,14 +197,21 @@
     function renderQuestions() {
         questionsContainer.innerHTML = '';
 
-        const filtered = allQuestions.filter(q => {
+        let filtered = allQuestions.filter(q => {
             const hasInclude = currentFilter.include.length === 0 || q.categories.some(cat => currentFilter.include.includes(cat));
             const noExclude = q.categories.every(cat => !currentFilter.exclude.includes(cat));
             const matchSearch = !currentFilter.searchTerm ||
                 q.question.toLowerCase().includes(currentFilter.searchTerm) ||
                 q.answer.toLowerCase().includes(currentFilter.searchTerm);
             return hasInclude && noExclude && matchSearch;
-        }).slice(0, currentFilter.max);
+        });
+
+        // Shuffle if random order is enabled
+        if (currentFilter.random) {
+            filtered = filtered.sort(() => Math.random() - 0.5);
+        }
+
+        filtered = filtered.slice(0, currentFilter.max);
 
         if (filtered.length === 0) {
             noResults.classList.remove('hidden');
@@ -274,6 +291,11 @@
 
     maxQuestionsInput.addEventListener('change', () => {
         currentFilter.max = parseInt(maxQuestionsInput.value, 10) || 10;
+        renderQuestions();
+    });
+
+    randomOrderCheckbox.addEventListener('change', () => {
+        currentFilter.random = randomOrderCheckbox.checked;
         renderQuestions();
     });
 
