@@ -222,9 +222,12 @@
             `;
 
             // Bind toggle handler
-            el.querySelector('button').addEventListener('click', () => {
-                el.querySelector('.answer').classList.toggle('show');
-            });
+            const btn = el.querySelector('button');
+            const ans = el.querySelector('.answer');
+btn.addEventListener('click', () => {
+    const isVisible = ans.classList.toggle('show');
+    btn.textContent = isVisible ? 'Hide Answer' : 'Show Answer';
+});
 
             return el;
         }
