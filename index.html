@@ -233,10 +233,7 @@
 
             el.innerHTML = `
                 <div class="p-6">
-                    /*<div class="mb-4">${q.categories.map(cat => `<span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">${cat}</span>`).join('')}</div>*/
-                    <div class="mb-4">
-  ${q.categories.map(cat =>
-    `<span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">${cat}</span>`
+                    <div class="mb-4"> ${q.categories.map(cat => <span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">${cat}</span>`
   ).join('')}
   <span class="px-3 py-1 bg-[#93a334] text-white text-xs font-semibold rounded-full">
     ${q.points} pts
