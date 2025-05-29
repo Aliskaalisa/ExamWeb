@@ -33,57 +33,76 @@
 
         <!-- Filter Panel -->
         <div id="filterSection" class="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Questions</h2>
-            <div class="flex flex-wrap gap-4 mb-4">
-                <!-- Include Category Multi-Select -->
-                <div class="relative" id="includeWrapper">
-                    <label for="includeDropdownBtn" class="block text-sm font-medium text-gray-700 mb-1">Choose category</label>
-                    <button id="includeDropdownBtn" type="button" class="w-52 px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <span id="includeDropdownLabel" class="truncate text-left">All</span>
-                        <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
-                    </button>
-                    <div id="includeDropdown" class="absolute z-10 mt-1 w-52 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
-                </div>
+                  <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Questions</h2>
 
-                <!-- Exclude Category Multi-Select -->
-                <div class="relative" id="excludeWrapper">
-                    <label for="excludeDropdownBtn" class="block text-sm font-medium text-gray-700 mb-1">Exclude category</label>
-                    <button id="excludeDropdownBtn" type="button" class="w-52 px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <span id="excludeDropdownLabel" class="truncate text-left">None</span>
-                        <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
-                    </button>
-                    <div id="excludeDropdown" class="absolute z-10 mt-1 w-52 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
-                </div>
-                 <!-- Points Range Filter (NEW) -->
-                <div>
-                    <label for="minPoints" class="block text-sm font-medium text-gray-700 mb-1">Points range</label>
-                    <div>
-                        <input type="number" id="minPoints" placeholder="Min" class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                        <span class="select-none">–</span>
-                        <input type="number" id="maxPoints" placeholder="Max" class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                    </div>
-                </div>
-            </div>
+                      <!-- Row 1 – every filter control -->
+                        <div class="flex flex-wrap gap-4 items-end mb-4">
+                        <!-- ONE flex container for all controls -->
+  <div class="flex flex-wrap gap-4 items-end">
+    <!-- Include Category -->
+    <div class="relative" id="includeWrapper">
+      <label class="block text-sm font-medium text-gray-700 mb-1"
+             for="includeDropdownBtn">Choose category</label>
+      <button id="includeDropdownBtn" type="button"
+              class="w-52 px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <span id="includeDropdownLabel" class="truncate text-left">All</span>
+        <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
+      </button>
+      <div id="includeDropdown"
+           class="absolute z-10 mt-1 w-52 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
+    </div>
 
-                <!-- Max Questions -->
-                <div>
-                    <label for="maxQuestions" class="block text-sm font-medium text-gray-700 mb-1">Max Questions</label>
-                    <input type="number" id="maxQuestions" min="1" value="10" class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                </div>
+    <!-- Exclude Category -->
+    <div class="relative" id="excludeWrapper">
+      <label class="block text-sm font-medium text-gray-700 mb-1"
+             for="excludeDropdownBtn">Exclude category</label>
+      <button id="excludeDropdownBtn" type="button"
+              class="w-52 px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <span id="excludeDropdownLabel" class="truncate text-left">None</span>
+        <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
+      </button>
+      <div id="excludeDropdown"
+           class="absolute z-10 mt-1 w-52 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden"></div>
+    </div>
 
-                <!-- Random Order Checkbox -->
-                    <div>
-                        <input type="checkbox" id="randomOrder" class="h-4 w-4 text-[#93a334] focus:ring-indigo-500 border-gray-300 rounded mr-2">
-                        <label for="randomOrder" class="text-sm font-medium text-gray-700 select-none">Random order</label>
-                    </div>
-        </div>
-            <div>
-                <input type="text" id="searchInput" placeholder="Search questions..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <button id="searchBtn" class="bg-[#93a334] text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
-        </div>
+    <!-- Points Range -->
+    <div>
+      <label for="minPoints"
+             class="block text-sm font-medium text-gray-700 mb-1">Points range</label>
+      <div class="flex items-center gap-2">
+        <input id="minPoints" type="number" placeholder="Min"
+               class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <span class="select-none">–</span>
+        <input id="maxPoints" type="number" placeholder="Max"
+               class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+    </div>
+
+    <!-- Max Questions -->
+    <div>
+      <label for="maxQuestions"
+             class="block text-sm font-medium text-gray-700 mb-1">Max Questions</label>
+      <input id="maxQuestions" type="number" min="1" value="10"
+             class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    </div>
+
+    <!-- Random Order -->
+    <div class="flex items-center h-9">
+      <input id="randomOrder" type="checkbox"
+             class="h-4 w-4 text-[#93a334] focus:ring-indigo-500 border-gray-300 rounded mr-2">
+      <label for="randomOrder"
+             class="text-sm font-medium text-gray-700 select-none">Random&nbsp;order</label>
+    </div>
+      
+        <div class="flex items-center">
+    <input id="searchInput" type="text" placeholder="Search questions…"
+           class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    <button id="searchBtn"
+            class="bg-[#93a334] text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
+      <i class="fas fa-search"></i>
+    </button>
+  </div>
+</div>
 
 
         <!-- Questions Grid -->
