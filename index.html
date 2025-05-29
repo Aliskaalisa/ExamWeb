@@ -23,7 +23,7 @@
 <body class="bg-gray-50 min-h-screen relative">
     <!-- Logo -->
     <img src="chemistry.png" alt="Chemistry Logo" class="fixed top-4 left-4 w-[11vw] select-none pointer-events-none">
-
+<div class="flex flex-wrap gap-4 mb-4 items-end">
     <!-- Main wrapper at 70% width -->
     <div class="mx-auto px-4 py-8" style="width:70%;">
         <header class="text-center mb-12">
@@ -57,7 +57,7 @@
                  <!-- Points Range Filter (NEW) -->
                 <div>
                     <label for="minPoints" class="block text-sm font-medium text-gray-700 mb-1">Points range</label>
-                    <div class="flex items-center gap-2">
+                    <div>
                         <input type="number" id="minPoints" placeholder="Min" class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                         <span class="select-none">–</span>
                         <input type="number" id="maxPoints" placeholder="Max" class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -72,13 +72,12 @@
                 </div>
 
                 <!-- Random Order Checkbox -->
-                <div class="flex items-end">
-                    <div class="flex items-center h-9">
+                    <div>
                         <input type="checkbox" id="randomOrder" class="h-4 w-4 text-[#93a334] focus:ring-indigo-500 border-gray-300 rounded mr-2">
                         <label for="randomOrder" class="text-sm font-medium text-gray-700 select-none">Random order</label>
                     </div>
-                </div>
-            <div class="flex items-center">
+        </div>
+            <div>
                 <input type="text" id="searchInput" placeholder="Search questions..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 <button id="searchBtn" class="bg-[#93a334] text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
                     <i class="fas fa-search"></i>
