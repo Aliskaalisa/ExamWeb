@@ -136,18 +136,18 @@
             } else if (arr.length === 1) {
                 labelEl.textContent = arr[0];
             } else {
-                labelEl.textContent = `${arr.length} selected`;
+                labelEl.textContent = ${arr.length} selected;
             }
         };
 
         const createCheckboxItem = (cat, group) => {
-            const safeId = `${group}-${cat.replace(/\s+/g, '_')}`;
+            const safeId = ${group}-${cat.replace(/\s+/g, '_')};
             const wrapper = document.createElement('div');
             wrapper.className = 'px-4 py-2 hover:bg-gray-100 flex items-center gap-2';
-            wrapper.innerHTML = `
+            wrapper.innerHTML = 
                 <input type="checkbox" id="${safeId}" value="${cat}" class="cursor-pointer">
                 <label for="${safeId}" class="text-sm cursor-pointer select-none">${cat}</label>
-            `;
+            ;
             return wrapper;
         };
 
@@ -230,19 +230,12 @@
         function createQuestionCard(q) {
             const el = document.createElement('div');
             el.className = 'question-card bg-white rounded-xl shadow-md overflow-hidden';
-            el.id = `question-${q.id}`;
+            el.id = question-${q.id};
 
-            el.innerHTML = `
+            el.innerHTML = 
                 <div class="p-6">
-                    <div class="flex items-center justify-between mb-4">
-    <!-- категории -->
-    <div>
-        ${q.categories.map(cat => `
-            <span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">
-                ${cat}
-            </span>
-        `).join('')}
-    </div><h3 class="text-lg font-medium text-gray-800 mb-4">${q.question}</h3>
+                    <div class="mb-4">${q.categories.map(cat => <span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">${cat}</span>).join('')}</div>
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">${q.question}</h3>
                     <div class="answer bg-gray-50 p-4 rounded-lg" id="answer-${q.id}">
                         <h4 class="text-sm font-semibold text-gray-500 mb-1">Answer</h4>
                         <p class="text-gray-700">${q.answer}</p>
@@ -251,7 +244,7 @@
                         Show Answer
                     </button>
                 </div>
-            `;
+            ;
 
             // Bind toggle handler
             const btn = el.querySelector('button');
