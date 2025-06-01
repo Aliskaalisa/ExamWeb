@@ -259,7 +259,7 @@ function createQuestionCard(q) {
                 <p class="text-gray-700">${q.answer}</p>
             </div>
 
-            <div class="hint bg-[#e6922e] border border-[#e6922e] text-[#e6922e] text-sm p-3 rounded-lg mb-2 hidden" id="hint-${q.id}">
+            <div class="hint bg-gray-50 border border-gray-50 text-gray-500 text-sm p-3 rounded-lg mb-2 hidden" id="hint-${q.id}">
                 📘 Check pages ${q.pages} of your textbook.
             </div>
 
@@ -267,7 +267,7 @@ function createQuestionCard(q) {
                 <button type="button" class="bg-[#93a334] text-white px-4 py-2 rounded-lg hover:bg-[#717c26] transition" data-id="${q.id}" data-type="answer">
                     Show Answer
                 </button>
-                <button type="button" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition" data-id="${q.id}" data-type="hint">
+                <button type="button" class="bg-[#e6922e] text-white px-4 py-2 rounded-lg hover:bg-[#ce8129] transition" data-id="${q.id}" data-type="hint">
                     Show Hint
                 </button>
             </div>
