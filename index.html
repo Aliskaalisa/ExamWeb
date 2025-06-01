@@ -202,7 +202,7 @@
                         answer: row.answer,
                         categories,
                         points: Number(row.points) || 0,
-                        pages: row.pages || 'N/A'
+                        pages: row.pages ? String(row.pages).trim() : 'N/A'
                     };
                 });
 
