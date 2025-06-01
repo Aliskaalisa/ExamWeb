@@ -195,7 +195,7 @@
 
                 allQuestions = json.map((row, index) => {
                     const rawCategories = row.category || 'general';
-                    const categories = rawCategories.split(',').map(c => c.trim().toLowerCase());
+                    const categories = rawCategories.split(';').map(c => c.trim().toLowerCase());
                     return {
                         id: index + 1,
                         question: row.question,
