@@ -238,41 +238,61 @@
         }
 
         /* --------- JSX-like Builder ---------- */
-        function createQuestionCard(q) {
-            const el = document.createElement('div');
-            el.className = 'question-card bg-white rounded-xl shadow-md overflow-hidden';
-            el.id = `question-${q.id}`;
+function createQuestionCard(q) {
+    const el = document.createElement('div');
+    el.className = 'question-card bg-white rounded-xl shadow-md overflow-hidden';
+    el.id = `question-${q.id}`;
 
-            el.innerHTML = `
-                <div class="p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            ${q.categories.map(cat => `<span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">${cat}</span>`).join('')}
-                        </div>
-                        <span class="text-sm font-semibold text-[#93a334] whitespace-nowrap">${q.points} points</span>
-                    </div>
-
-                    <h3 class="text-lg font-medium text-gray-800 mb-4">${q.question}</h3>
-
-                    <div class="answer bg-gray-50 p-4 rounded-lg" id="answer-${q.id}">
-                        <h4 class="text-sm font-semibold text-gray-500 mb-1">Answer</h4>
-                        <p class="text-gray-700">${q.answer}</p>
-                    </div>
-                    <button type="button" class="mt-4 bg-[#93a334] text-white px-4 py-2 rounded-lg hover:bg-[#717c26] transition" data-id="${q.id}">
-                        Show Answer
-                    </button>
+    el.innerHTML = `
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    ${q.categories.map(cat => `<span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full mr-1">${cat}</span>`).join('')}
                 </div>
-            `;
+                <span class="text-sm font-semibold text-[#93a334] whitespace-nowrap">${q.points} points</span>
+            </div>
 
-            const btn = el.querySelector('button');
-            const ans = el.querySelector('.answer');
-            btn.addEventListener('click', () => {
-                const isVisible = ans.classList.toggle('show');
+            <h3 class="text-lg font-medium text-gray-800 mb-4">${q.question}</h3>
+
+            <div class="answer bg-gray-50 p-4 rounded-lg mb-2 hidden" id="answer-${q.id}">
+                <h4 class="text-sm font-semibold text-gray-500 mb-1">Answer</h4>
+                <p class="text-gray-700">${q.answer}</p>
+            </div>
+
+            <div class="hint bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm p-3 rounded-lg mb-2 hidden" id="hint-${q.id}">
+                📘 Check pages ${q.pages} of your textbook.
+            </div>
+
+            <div class="flex gap-4">
+                <button type="button" class="bg-[#93a334] text-white px-4 py-2 rounded-lg hover:bg-[#717c26] transition" data-id="${q.id}" data-type="answer">
+                    Show Answer
+                </button>
+                <button type="button" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition" data-id="${q.id}" data-type="hint">
+                    Show Hint
+                </button>
+            </div>
+        </div>
+    `;
+
+    const answerBox = el.querySelector(`#answer-${q.id}`);
+    const hintBox = el.querySelector(`#hint-${q.id}`);
+
+    const buttons = el.querySelectorAll('button');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.getAttribute('data-type');
+            if (type === 'answer') {
+                const isVisible = answerBox.classList.toggle('show');
                 btn.textContent = isVisible ? 'Hide Answer' : 'Show Answer';
-            });
+            } else if (type === 'hint') {
+                hintBox.classList.toggle('hidden');
+            }
+        });
+    });
 
-            return el;
-        }
+    return el;
+}
+
 
         /* --------- Rendering ---------- */
         function renderQuestions() {
